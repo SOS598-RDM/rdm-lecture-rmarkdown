@@ -1,0 +1,16 @@
+---
+title: "a brief introduction to Rmarkdown"
+subtitle: FALSE
+author: FALSE
+date: "2019-02-22"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: ["default", "assets/my-theme.css", "libs/remark-css/default-fonts.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+in progress...
