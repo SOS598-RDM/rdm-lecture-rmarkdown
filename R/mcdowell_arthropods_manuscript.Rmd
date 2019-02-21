@@ -36,7 +36,8 @@ library(tidyverse)
 # nice thing about the read_csv package is that it does not automatically
 # convert strings to factors as is the case for many other import methods.
 
-mcdowellArthropods <- read_csv('mcdowellArthropods.csv', na=c("NULL", ""))
+mcdowellArthropods <- read_csv(file = '~/localRepos/rdm-lecture-rmarkdown/data/mcdowellArthropods.csv',
+                               na=c("NULL", ""))
 ```
 
 

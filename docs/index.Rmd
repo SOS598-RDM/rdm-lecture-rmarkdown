@@ -13,4 +13,26 @@ output:
       countIncrementalSlides: false
 ---
 
-in progress...
+#### literate programming
+
+a common approach
+
+<img src="assets/figures/literateProgramming.png">
+
+.footnote[K. Healy [The Plain Person's Guide to Plain Text Social Science](https://kieranhealy.org/files/papers/plain-person-text.pdf)]
+
+
+---
+
+#### literate programming
+
+a common approach
+
+<img src="assets/figures/literateProgramming.png">
+
+* the problem is that the gaps are particularly prone to errors
+
+* literate programming addresses this through the integration of code and text
+
+
+.footnote[D. E. Knuth, Literate programming]
