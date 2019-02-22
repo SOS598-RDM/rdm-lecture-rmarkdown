@@ -19,6 +19,7 @@ a common approach
 
 <img src="assets/figures/literateProgramming.png">
 
+
 .footnote[K. Healy [The Plain Person's Guide to Plain Text Social Science](https://kieranhealy.org/files/papers/plain-person-text.pdf)]
 
 
@@ -35,4 +36,28 @@ a common approach
 * literate programming addresses this through the integration of code and text
 
 
-.footnote[D. E. Knuth, Literate programming]
+.footnote[D. E. Knuth [Literate Programming](http://www.literateprogramming.com/knuthweb.pdf)]
+
+
+---
+
+#### initial steps toward reproducible research 
+
+1. Organize your data & code
+
+2. Everything with a script
+
+3. Automate the process (GNU Make)
+
+4. <font color="blue">Turn scripts into reproducible reports</font>
+
+5. Turn repeated code into functions
+
+6. Create a package/module
+
+7. Use version control (git/GitHub)
+
+8. License your software
+
+
+.footnote[K. Broman [steps toward reproducible research](https://kbroman.org/steps2rr/)]
