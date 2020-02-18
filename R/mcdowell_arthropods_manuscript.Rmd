@@ -5,10 +5,8 @@ author:
 - Phil Tarrant
 bibliography: McDowellPreserve.bib
 output:
-  # html_document:
-  #   fig_caption: yes
-  #   theme: journal
-  word_document: default
+  word_document: 
+    reference_docx: mcdowell_arthropods_manuscript_format.docx
 abstract: The McDowell Sonoran Preserve is a rich desert environment. The arthropod
   assemblage is among the most diverse of all desert habitats. The arthropod assemblage
   mimics the predominant vegetation with clear transitions along the north-south axis.
@@ -28,38 +26,38 @@ library(tidyverse)
 ```
 
 
-```{r import_data, include=FALSE}
-# Import the data using the read_csv function that is part of the tidyverse 
-# package. In most database systems, lack of data (not zero, but specifically a 
-# lack of data) are represented by "NULL". In R, lack of data are represented by
-# NA. Add an argument to convert any NULL or blank values to NA upon import. One
-# nice thing about the read_csv package is that it does not automatically
-# convert strings to factors as is the case for many other import methods.
+```{r import-data, include=FALSE}
 
-mcdowellArthropods <- read_csv(file = '~/localRepos/rdm-lecture-rmarkdown/data/mcdowellArthropods.csv',
-                               na=c("NULL", ""))
+# Import the data using the read_csv function that is part of the tidyverse
+# package. In most database systems, lack of data (not zero, but specifically a
+# lack of data) are represented by `NULL`. In R, lack of data are represented by
+# NA. The `read_csv` package does not automatically convert strings to factors
+# as is the case for many other import methods, such as base R's `read.csv`.
+
+mcdowellArthropods <- read_csv(file = 'https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.643.2&entityid=4bc08a24e06acfe761553cf8360b983d')
 ```
 
 
-```{r check_class, include=FALSE}
+```{r check-class, include=FALSE}
 # inspect the data - what type of entity is this?
 
 class(mcdowellArthropods)
 ```
 
 
-```{r check_structure, include=FALSE}
+```{r check-structure, include=FALSE}
 # inspect the data - what is the structure?
 
 str(mcdowellArthropods)
 ```
 
 
-```{r unique_value, include=FALSE}
-# inspect the unique values. In this case, we are using the apply function to 
-# "apply" the unique function over the margins of a data frame. the third
-# argument of the function ("unique") indicates that we want the unique values
-# of the columns. that we want the unique values of the columns is indicated by
+```{r unique-value, include=FALSE}
+
+# Inspect the unique values. In this case, we are using the `apply` function to
+# "apply" the `unique` function over the margins of a data frame. The third
+# argument of the function (`unique`) indicates that we want the unique values
+# of the columns. That we want the unique values of the columns is indicated by
 # the second argument ("2") of this function; we would have used a 1 if we
 # wanted the unique values of each row (but that would not make sense in this
 # case).
@@ -68,43 +66,57 @@ apply(mcdowellArthropods, 2, unique)
 ```
 
 
-```{r check_low_trapcount, include=FALSE}
-# Why are some trapcounts so low? We need to take a closer look a those. we will
-# use the filter function in dplyr. Here, we are passing the mcdowellArthropods
-# data object to the filter function, which is part of the dplyr package. Dplyr
-# uses pipes (%>%) to link commands, a particularly nice feature when you are
-# performing many actions on an object. 
+```{r check-low-trapcount, include=FALSE}
+
+# Why are some trapcounts so low? We need to take a closer look at those. We
+# will use the filter function in dplyr. Here, we are passing the
+# mcdowellArthropods data object to the `filter` function, which is part of the
+# dplyr package. dplyr uses pipes (%>%) to link commands, a particularly nice
+# feature when you are performing many actions on an object.
+
 mcdowellArthropods %>% 
-  filter(trapcount < 6) %>%
+  filter(trap_count < 6) %>%
   print(n = 50)
 
 # The base R version of performing the above (code below) is not onerous but
-# addressing the next chunk (orgs_by_season) would be far more painful without
-# pipes and dplyr.
-# print(mcdowellArthropods[mcdowellArthropods$trapcount < 6,], n = 50)
+# addressing a chunk like organisms-per-site-season (below) would be very
+# verbose and complicated without pipes and dplyr.
+```
+
+```{r check-low-trapcount-dplyr, include=FALSE}
+
+# With a better sense for these data, we can modify them for our analyses.
+
+# First, we need to filter to the desired set of data. We want to (1) exclude
+# collections with a low trap count as noted in the previous step, and (2) omit
+# sites that were discontinued. We can identify sites that have been
+# discontinued by looking at the most recent sampling date.
+
+mcdowellArthropods %>% 
+  group_by(site_code) %>%
+  summarise(maxDate = max(sample_date)) %>% 
+  arrange(maxDate)
 ```
 
 
-```{r orgs_per_season, include=FALSE}
+```{r organisms-per-site-season, include=FALSE}
 
-# Since they were pulled from a database, the data are already in a long format,
-# which is preferable for analysis relative to a wide format as you might
-# encouter in a spreadsheet where samples are rows and taxa are spread across
-# columns. We do, however, still need to modify the data for our analyses.
+# Second, for our analyses, we can ignore the different size classes so all
+# organisms, regardless of size, can be summed for each sample.
 
-# First, filter the traps with a low trap count noted in the previous step.
-
-# Second, for our analyses, we can ignore the different size classes so all organisms,
-# regardless of size, can be summed for each sample. 
-
-# Third, we want to bin the sampling dates by season and extract the year for plotting.
+# Third, we want to bin the sampling dates by season and extract the year for
+# plotting.
 
 # Finally, we need to standardize the sampling effort to account for an
 # inconsistent number of traps across sampling events, here we will use the
-# average number of organisms per trap per, per season across the years of study.
+# average number of organisms per trap per, per season across the years of
+# study.
 
-orgs_by_season <- mcdowellArthropods %>% 
-  filter(trapcount > 4) %>%
+organismsSiteCollection <- mcdowellArthropods %>% 
+  filter(
+    trap_count >= 6,
+    !grepl('mine|prospector', site_code, ignore.case = TRUE)
+  ) %>%
   rowwise() %>% 
   mutate(allsizes = sum(lt2mm, `_2_5mm`, `_5_10mm`, gt10mm, unsized, na.rm = T)) %>% 
   ungroup() %>%
@@ -115,11 +127,9 @@ orgs_by_season <- mcdowellArthropods %>%
       as.integer(format(sample_date, format = '%m')) %in% c(5,6,7,8) ~ 'summer',
       as.integer(format(sample_date, format = '%m')) %in% c(9,10) ~ 'fall'
     ),
-    year = format(sample_date, format = '%Y')) %>% 
-  group_by(site_id, season, year) %>%
-  summarise(average = sum(allsizes / trapcount)) %>%
-  ungroup()
-
+    year = format(sample_date, format = '%Y')) %>%
+  group_by(site_code, season, year) %>%
+  summarise(average = sum(allsizes / trap_count))
 ```
 
 ### Introduction
@@ -131,11 +141,11 @@ Protected lands, such as Scottsdale’s McDowell Sonoran Preserve (hereafter ref
  
 *Pitfall trap methods and sampling locations*
 
-Ten transects for the collection of ground-dwelling arthropods were established.  Each transect consists of 10 traps spaced ~5m apart along a transect line established perpendicular to slopes sensu [@mcintyre_ecology_2000]. Each trap consists of a short (~6 in.) section of 4-in. pipe buried flush with the soil surface.  Traps are covered with a tight-fitting PVC cap until being set at which time the cap is removed and a 16-oz. plastic cup is inserted into the pipe. Traps are left uncovered for ~72 consecutive hours until the sample cup is collected. Upon collection, trap contents are transferred to sample jars containing 70% ethyl alcohol for preservation, and subsequent transport to ASU (or MSC offices) for sorting and identification. Arthropods are sorted to the lowest practical taxonomic (LPT) level  by an MSFI intern (Chad Allen) and/or CAP LTER taxonomist Maggie Tseng.
+Ten transects for the collection of ground-dwelling arthropods were established.  Each transect consists of 10 traps spaced ~5m apart along a transect line established perpendicular to slopes sensu [@mcintyre_ecology_2000]. Each trap consists of a short (~6 in.) section of 4-in. pipe buried flush with the soil surface. Traps are covered with a tight-fitting PVC cap until being set at which time the cap is removed and a 16-oz. plastic cup is inserted into the pipe. Traps are left uncovered for ~72 consecutive hours until the sample cup is collected. Upon collection, trap contents are transferred to sample jars containing 70% ethyl alcohol for preservation, and subsequent transport to ASU (or MSC offices) for sorting and identification. Arthropods are sorted to the lowest practical taxonomic (LPT) level  by an MSFI intern (Chad Allen) and/or CAP LTER taxonomist Maggie Tseng.
 
-Pitfall trap transect locations include five groups of paired transects that span a large range of the north-south and east-west axes of the Preserve (Figure 1), and include numerous unique vegetation communities. Four transect pairs are positioned such that one transect is within 100 m of the Preserve boundary and existing development, and the second transect at least 0.5 km from the Preserve boundary/development. A fifth ‘control’ paired transect is located in a similar fashion but at a location where there is not currently development near the Preserve boundary (Dixie Mine and Prospector; Figure 1). Transect locations were selected specifically to include relatively similar geomorphological characteristics, including elevation (610-914 m), slope (≤ 20%), and aspect (0-270°, 315-360°) to minimize extraneous factors. All transects are positioned within 75 m of existing trails to facilitate access and limit off-trail travel while keeping traps out of public view.
+Pitfall trap transect locations include five groups of paired transects that span a large range of the north-south and east-west axes of the Preserve (Figure 1), and include numerous unique vegetation communities. Four transect pairs are positioned such that one transect is within 100 m of the Preserve boundary and existing development, and the second transect at least 0.5 km from the Preserve boundary/development. A fifth control paired transect is located in a similar fashion but at a location where there is not currently development near the Preserve boundary (Dixie Mine and Prospector; Figure 1). Transect locations were selected specifically to include relatively similar geomorphological characteristics, including elevation (610-914 m), slope (≤ 20%), and aspect (0-270°, 315-360°) to minimize extraneous factors. All transects are positioned within 75 m of existing trails to facilitate access and limit off-trail travel while keeping traps out of public view.
 
-Sampling is conducted quarterly in keeping with CAP LTER protocols and concomitant sampling at other Valley location. As of this writing, six quarterly collections (winter 2012 through spring 2013) have been conducted. A preliminary assessment of those data is presented here. More detailed analyses are planned following (at least) two more quarterly collections (summer, fall 2013). 
+Sampling is conducted quarterly in keeping with CAP LTER protocols and concomitant sampling at other Valley location.
 
 ### Results
 
@@ -145,17 +155,18 @@ Paired transects near the Dixie Mine (Prospector, Dixie Mine), the Brown's Ranch
 
 The average number of organisms per trap, including all taxa (LPT), collected in 2012 were used for a preliminary assessment of arthropod community composition. Data from a CAP LTER ground-dwelling arthropod monitoring site in the McDowell Mountain Park are included for comparison. Diversity (Shannon-Weaver (H')) was relatively consistent with little difference among sites, though diversity was higher at all Preserve sites relative to McDowell Mountain Park (Table 2). Though overall diversity was relatively similar among sites, an ordination (Non-metric Multidimensional Scaling (NMDS), Bray-Curtis distance) of the combined 2012 data suggests 'regional' differences with relatively unique assemblages near the Tom's Thumb trail head, Brown's Ranch trail head, and all others toward the southern-end of the Preserve (Figure 2). Regional differences across paired sites generally outweigh relatively smaller differences between boundary and interior assemblages within paired locations. 
 
-```{r plot_by_seaons, echo=FALSE, fig.width=8, fig.cap="Figure 1. seasonal averages across sampling sites"}
+```{r plot-by-seaons, echo=FALSE, fig.width=8, fig.cap="Figure 1. seasonal averages across sampling sites"}
 
 # We will use ggplot to plot our data, here plotting each site in its own panel 
-ggplot(orgs_by_season, aes(x=year, y=average, fill = factor(season))) + 
-  geom_bar(stat = 'identity', position = 'dodge') + 
-  facet_wrap(~site_id) +
+
+ggplot(organismsSiteCollection, aes(x=year, y=average, fill = factor(season))) + 
+  geom_bar(stat = 'identity', position = position_dodge2(preserve = 'single')) + 
+  facet_wrap(~site_code, nrow = 4, ncol = 2) +
   labs(x = "year") +
   labs(y = "average number of organisms per trap per season") +
   labs(fill = 'season') +
-  ggtitle("McDowell Sonoran Preserve ground-dwelling arthropods: 2012-2016") +
-  scale_fill_manual(values = c('#e6e6e6', '#cccccc', '#999999', '#000080')) +
+  ggtitle("McDowell Sonoran Preserve ground-dwelling arthropods: 2012-2019") +
+  # scale_fill_manual(values = c('#e6e6e6', '#cccccc', '#999999', '#000080')) +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
@@ -164,7 +175,7 @@ ggplot(orgs_by_season, aes(x=year, y=average, fill = factor(season))) +
 
 ### Discussion
 
-  The goals of this study are to (1) provide an assessment of the ground-dwelling arthropod community in the Preserve as part of the broader efforts of the MSFI, and (2) to examine arthropod assemblages in the context of ecological stress stemming from development pressure at the Preserve boundary. This project would not be possible without the strong support of the McDowell Sonoran Conservancy, the City of Scottsdale, and the tremendous efforts of the Preserve stewards. The project has and continues to benefit from the broader collaboration with MSFI participants.
+The goals of this study are to (1) provide an assessment of the ground-dwelling arthropod community in the Preserve as part of the broader efforts of the MSFI, and (2) to examine arthropod assemblages in the context of ecological stress stemming from development pressure at the Preserve boundary. This project would not be possible without the strong support of the McDowell Sonoran Conservancy, the City of Scottsdale, and the tremendous efforts of the Preserve stewards. The project has and continues to benefit from the broader collaboration with MSFI participants.
 
 
 ### Literature cited

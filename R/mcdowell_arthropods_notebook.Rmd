@@ -11,72 +11,74 @@ library(tidyverse)
 
 Import the data using the read_csv function that is part of the tidyverse
 package. In most database systems, lack of data (not zero, but specifically a
-lack of data) are represented by "NULL". In R, lack of data are represented by
-NA. Add an argument to convert any NULL or blank values to NA upon import. One
-nice thing about the read_csv package is that it does not automatically convert
-strings to factors as is the case for many other import methods.
+lack of data) are represented by `NULL`. In R, lack of data are represented by
+NA. The `read_csv` package does not automatically convert strings to factors as is
+the case for many other import methods, such as base R's `read.csv`.
 
-```{r import_data, include=FALSE}
+```{r import-data, include=FALSE}
 
-mcdowellArthropods <- read_csv(file = '~/localRepos/rdm-lecture-rmarkdown/data/mcdowellArthropods.csv',
-                               na=c("NULL", ""))
+mcdowellArthropods <- read_csv(file = 'https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.643.2&entityid=4bc08a24e06acfe761553cf8360b983d')
 ```
 
 Inspect the data - what type of entity is this?
 
-```{r check_class}
+```{r check-class}
 
 class(mcdowellArthropods)
 ```
 
 Inspect the data - what is the structure?
 
-```{r check_structure}
+```{r check-structure}
 
 str(mcdowellArthropods)
 ```
 
-Inspect the unique values. In this case, we are using the apply function to
-"apply" the unique function over the margins of a data frame. the third argument
-of the function ("unique") indicates that we want the unique values of the
+Inspect the unique values. In this case, we are using the `apply` function to
+"apply" the `unique` function over the margins of a data frame. The third argument
+of the function (`unique`) indicates that we want the unique values of the
 columns. That we want the unique values of the columns is indicated by the
 second argument ("2") of this function; we would have used a 1 if we wanted the
 unique values of each row (but that would not make sense in this case).
 
-```{r unique_value}
+```{r unique-value}
 
 apply(X = mcdowellArthropods, MARGIN = 2, FUN = unique)
 ```
 
 Why are some trapcounts so low? We need to take a closer look at those. We will
 use the filter function in dplyr. Here, we are passing the mcdowellArthropods
-data object to the filter function, which is part of the dplyr package. dplyr
+data object to the `filter` function, which is part of the dplyr package. dplyr
 uses pipes (%>%) to link commands, a particularly nice feature when you are
 performing many actions on an object.
 
-```{r check_low_trapcount_dplyr}
+```{r check-low-trapcount-dplyr}
 
 mcdowellArthropods %>% 
-  filter(trapcount < 6) %>%
+  filter(trap_count < 6) %>%
   print(n = 50)
-
 ```
 
 The base R version of performing the above (code below) is not onerous but
-addressing the next chunk (orgs_by_season) would be far more painful without
+addressing a chunk like organisms-per-site-season (below) would be very verbose and complicated without
 pipes and dplyr.
 
-```{r check_low_trapcount_base}
+```{r check-low-trapcount-base}
 
-print(mcdowellArthropods[mcdowellArthropods$trapcount < 6,], n = 50)
+print(mcdowellArthropods[mcdowellArthropods$trap_count < 6,], n = 50)
 ```
 
-Since they were pulled from a database, the data are already in a long format,
-which is preferable for analysis relative to a wide format as you might encouter
-in a spreadsheet where samples are rows and taxa are spread across columns. We
-do, however, still need to modify the data for our analyses.
+With a better sense for these data, we can modify them for our analyses.
 
-First, filter the traps with a low trap count noted in the previous step.
+First, we need to filter to the desired set of data. We want to (1) exclude collections with a low trap count as noted in the previous step, and (2) omit sites that were discontinued. We can identify sites that have been discontinued by looking at the most recent sampling date.
+
+```{r check-low-trapcount-dplyr}
+
+mcdowellArthropods %>% 
+  group_by(site_code) %>%
+  summarise(maxDate = max(sample_date)) %>% 
+  arrange(maxDate)
+```
 
 Second, for our analyses, we can ignore the different size classes so all
 organisms, regardless of size, can be summed for each sample.
@@ -88,10 +90,13 @@ Finally, we need to standardize the sampling effort to account for an
 inconsistent number of traps across sampling events, here we will use the
 average number of organisms per trap per, per season across the years of study.
 
-```{r orgs_per_season}
+```{r organisms-per-site-season}
 
-orgs_by_season <- mcdowellArthropods %>% 
-  filter(trapcount > 4) %>%
+organismsSiteCollection <- mcdowellArthropods %>% 
+  filter(
+    trap_count >= 6,
+    !grepl('mine|prospector', site_code, ignore.case = TRUE)
+  ) %>%
   rowwise() %>% 
   mutate(allsizes = sum(lt2mm, `_2_5mm`, `_5_10mm`, gt10mm, unsized, na.rm = T)) %>% 
   ungroup() %>%
@@ -102,27 +107,25 @@ orgs_by_season <- mcdowellArthropods %>%
       as.integer(format(sample_date, format = '%m')) %in% c(5,6,7,8) ~ 'summer',
       as.integer(format(sample_date, format = '%m')) %in% c(9,10) ~ 'fall'
     ),
-    year = format(sample_date, format = '%Y')) %>% 
-  group_by(site_id, season, year) %>%
-  summarise(average = sum(allsizes / trapcount)) %>%
-  ungroup()
+    year = format(sample_date, format = '%Y')) %>%
+  group_by(site_code, season, year) %>%
+  summarise(average = sum(allsizes / trap_count))
 ```
 
 We will use ggplot to plot our data, here plotting each site in its own panel.
 
-```{r plot_by_seaons}
+```{r plot-by-seaons}
 
-ggplot(orgs_by_season, aes(x=year, y=average, fill = factor(season))) + 
-  geom_bar(stat = 'identity', position = 'dodge') + 
-  facet_wrap(~site_id) +
+ggplot(organismsSiteCollection, aes(x=year, y=average, fill = factor(season))) + 
+  geom_bar(stat = 'identity', position = position_dodge2(preserve = 'single')) + 
+  facet_wrap(~site_code, nrow = 4, ncol = 2) +
   labs(x = "year") +
   labs(y = "average number of organisms per trap per season") +
   labs(fill = 'season') +
-  ggtitle("McDowell Sonoran Preserve ground-dwelling arthropods: 2012-2016") +
-  scale_fill_manual(values = c('#e6e6e6', '#cccccc', '#999999', '#000080')) +
+  ggtitle("McDowell Sonoran Preserve ground-dwelling arthropods: 2012-2019") +
+  # scale_fill_manual(values = c('#e6e6e6', '#cccccc', '#999999', '#000080')) +
   theme(
     panel.grid.major = element_blank(),
     panel.grid.minor = element_blank()
   )
 ```
-
