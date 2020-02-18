@@ -64,11 +64,6 @@ The base R version of performing the above (code below) is not onerous but
 addressing a chunk like organisms-per-site-season (below) would be very verbose and complicated without
 pipes and dplyr.
 
-```{r check-low-trapcount-base}
-
-print(mcdowellArthropods[mcdowellArthropods$trap_count < 6,], n = 50)
-```
-
 With a better sense for these data, we can modify them for our analyses.
 
 First, we need to filter to the desired set of data. We want to (1) exclude collections with a low trap count as noted in the previous step, and (2) omit sites that were discontinued. We can identify sites that have been discontinued by looking at the most recent sampling date.
