@@ -13,13 +13,6 @@ abstract: The McDowell Sonoran Preserve is a rich desert environment. The arthro
   Temporally, the numbers and types of organisms reflect precipitation patterns.
 ---
 
-<style type="text/css">
-h1 { /* Header 1 */
- font-size: 12px;
- color: Black;
-}
-</style>
-
 
 ```{r libraries, include=FALSE}
 library(tidyverse)
@@ -28,11 +21,12 @@ library(tidyverse)
 
 ```{r import-data, include=FALSE}
 
-# Import the data using the read_csv function that is part of the tidyverse
-# package. In most database systems, lack of data (not zero, but specifically a
-# lack of data) are represented by `NULL`. In R, lack of data are represented by
-# NA. The `read_csv` package does not automatically convert strings to factors
-# as is the case for many other import methods, such as base R's `read.csv`.
+# Import the data from the Environmental Data Initiative data catalog using the
+# read_csv function that is part of the tidyverse package. In most database
+# systems, lack of data (not zero but specifically a lack of data) are
+# represented by `NULL`. In R, lack of data are represented by NA. The
+# `read_csv` package does not automatically convert strings to factors as is the
+# case for many other import methods, such as base R's `read.csv`.
 
 mcdowellArthropods <- read_csv(file = 'https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.643.2&entityid=4bc08a24e06acfe761553cf8360b983d')
 ```
@@ -66,7 +60,7 @@ apply(mcdowellArthropods, 2, unique)
 ```
 
 
-```{r check-low-trapcount, include=FALSE}
+```{r check-low-trapcount-dplyr, include=FALSE}
 
 # Why are some trapcounts so low? We need to take a closer look at those. We
 # will use the filter function in dplyr. Here, we are passing the
@@ -83,7 +77,7 @@ mcdowellArthropods %>%
 # verbose and complicated without pipes and dplyr.
 ```
 
-```{r check-low-trapcount-dplyr, include=FALSE}
+```{r r check-last-sample-collection, include=FALSE}
 
 # With a better sense for these data, we can modify them for our analyses.
 

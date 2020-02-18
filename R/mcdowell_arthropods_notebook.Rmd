@@ -9,11 +9,12 @@ output:
 library(tidyverse)
 ```
 
-Import the data using the read_csv function that is part of the tidyverse
-package. In most database systems, lack of data (not zero, but specifically a
-lack of data) are represented by `NULL`. In R, lack of data are represented by
-NA. The `read_csv` package does not automatically convert strings to factors as is
-the case for many other import methods, such as base R's `read.csv`.
+Import the data from the Environmental Data Initiative data catalog using the
+read_csv function that is part of the tidyverse package. In most database
+systems, lack of data (not zero but specifically a lack of data) are represented
+by `NULL`. In R, lack of data are represented by NA. The `read_csv` package does
+not automatically convert strings to factors as is the case for many other
+import methods, such as base R's `read.csv`.
 
 ```{r import-data, include=FALSE}
 
@@ -72,7 +73,7 @@ With a better sense for these data, we can modify them for our analyses.
 
 First, we need to filter to the desired set of data. We want to (1) exclude collections with a low trap count as noted in the previous step, and (2) omit sites that were discontinued. We can identify sites that have been discontinued by looking at the most recent sampling date.
 
-```{r check-low-trapcount-dplyr}
+```{r check-last-sample-collection}
 
 mcdowellArthropods %>% 
   group_by(site_code) %>%

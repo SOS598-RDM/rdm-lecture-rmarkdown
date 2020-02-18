@@ -2,7 +2,7 @@
 title: "a brief introduction to Rmarkdown"
 subtitle: FALSE
 author: FALSE
-date: "2019-02-22"
+date: "spring 2020"
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -43,21 +43,21 @@ a common approach
 
 #### initial steps toward reproducible research 
 
-1. Organize your data & code
+* Organize your data and code
 
-2. Everything with a script
+* Everything with a script
 
-3. Automate the process (GNU Make)
+* Automate the process
 
-4. <font color="blue">Turn scripts into reproducible reports</font>
+* **Turn scripts into reproducible reports**
 
-5. Turn repeated code into functions
+* Turn repeated code into functions
 
-6. Create a package/module
+* Package functions for reuse
 
-7. Use version control (git/GitHub)
+* Use version control
 
-8. License your software
+* License your software
 
 
 .footnote[K. Broman [steps toward reproducible research](https://kbroman.org/steps2rr/)]
