@@ -13,6 +13,21 @@ output:
       countIncrementalSlides: false
 ---
 
+#### workflow
+
+<br>
+<br>
+
+.center[
+  <img src="assets/figures/data-science.png" width="80%">
+]
+
+
+.footnote[[R for Data Science](https://r4ds.had.co.nz/)]
+
+
+---
+
 #### literate programming
 
 a common approach
