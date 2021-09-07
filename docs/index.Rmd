@@ -1,8 +1,8 @@
 ---
-title: "a brief introduction to Rmarkdown"
+title: false
 subtitle: FALSE
 author: FALSE
-date: "spring 2020"
+date: false
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -11,68 +11,36 @@ output:
       highlightStyle: github
       highlightLines: true
       countIncrementalSlides: false
+
 ---
-
-#### workflow
-
-<br>
-<br>
 
 .center[
   <img src="assets/figures/data-science.png" width="80%">
 ]
 
-
 .footnote[[R for Data Science](https://r4ds.had.co.nz/)]
 
+???
 
----
-
-#### literate programming
-
-a common approach
-
-<img src="assets/figures/literateProgramming.png">
-
-
-.footnote[K. Healy [The Plain Person's Guide to Plain Text Social Science](https://kieranhealy.org/files/papers/plain-person-text.pdf)]
+#### workflow
 
 
 ---
 
-#### literate programming
+.center[
+  <img src="assets/figures/literateProgramming.png">
+]
 
-a common approach
+.footnote[
+- K. Healy [The Plain Person's Guide to Plain Text Social Science](https://kieranhealy.org/files/papers/plain-person-text.pdf)
+- D. E. Knuth [Literate Programming](http://www.literateprogramming.com/knuthweb.pdf)
+]
 
-<img src="assets/figures/literateProgramming.png">
+--
 
-* the problem is that the gaps are particularly prone to errors
+a problem is that the gaps are particularly prone to errors; literate
+programming addresses this through the integration of code and text
 
-* literate programming addresses this through the integration of code and text
+???
 
-
-.footnote[D. E. Knuth [Literate Programming](http://www.literateprogramming.com/knuthweb.pdf)]
-
-
----
-
-#### initial steps toward reproducible research 
-
-* Organize your data and code
-
-* Everything with a script
-
-* Automate the process
-
-* **Turn scripts into reproducible reports**
-
-* Turn repeated code into functions
-
-* Package functions for reuse
-
-* Use version control
-
-* License your software
-
-
-.footnote[K. Broman [steps toward reproducible research](https://kbroman.org/steps2rr/)]
+#### literate programming: a common approach
