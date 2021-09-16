@@ -1,8 +1,7 @@
 ---
 title: Temporal patterns of arthropod communities in the McDowell Sonoran Preserve
 author: 
-- Stevan Earl
-- Phil Tarrant
+- Giuseppe Verdi
 bibliography: McDowellPreserve.bib
 output:
   word_document: 
@@ -14,8 +13,12 @@ abstract: The McDowell Sonoran Preserve is a rich desert environment. The arthro
 ---
 
 
-```{r libraries, include=FALSE}
-library(tidyverse)
+```{r setup, include=FALSE}
+library(readr)
+library(skimr)
+library(ggplot2)
+library(dplyr)
+knitr::read_chunk("mcdowell_arthropods_functions.R")
 ```
 
 
@@ -28,7 +31,9 @@ library(tidyverse)
 # `read_csv` package does not automatically convert strings to factors as is the
 # case for many other import methods, such as base R's `read.csv`.
 
-mcdowellArthropods <- read_csv(file = 'https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.643.2&entityid=4bc08a24e06acfe761553cf8360b983d')
+mcdowellArthropods <- readr::read_csv(
+  file = 'https://portal.edirepository.org/nis/dataviewer?packageid=knb-lter-cap.643.2&entityid=4bc08a24e06acfe761553cf8360b983d'
+)
 ```
 
 
@@ -48,19 +53,14 @@ str(mcdowellArthropods)
 
 ```{r unique-value, include=FALSE}
 
-# Inspect the unique values. In this case, we are using the `apply` function to
-# "apply" the `unique` function over the margins of a data frame. The third
-# argument of the function (`unique`) indicates that we want the unique values
-# of the columns. That we want the unique values of the columns is indicated by
-# the second argument ("2") of this function; we would have used a 1 if we
-# wanted the unique values of each row (but that would not make sense in this
-# case).
+# `str()` is great but limited. We can use the `skimr` package to quickly get a
+# more comprehensive look into the data.
 
-apply(mcdowellArthropods, 2, unique)
+skimr::skim(mcdowellArthropods)
 ```
 
 
-```{r check-low-trapcount-dplyr, include=FALSE}
+```{r check-low-trapcount-within-doc, include=FALSE, eval=FALSE}
 
 # Why are some trapcounts so low? We need to take a closer look at those. We
 # will use the filter function in dplyr. Here, we are passing the
@@ -70,14 +70,15 @@ apply(mcdowellArthropods, 2, unique)
 
 mcdowellArthropods %>% 
   filter(trap_count < 6) %>%
+  select(site_code:trap_sampling_events_comments, -trap_name, -observer) %>%
   print(n = 50)
-
-# The base R version of performing the above (code below) is not onerous but
-# addressing a chunk like organisms-per-site-season (below) would be very
-# verbose and complicated without pipes and dplyr.
 ```
 
-```{r r check-last-sample-collection, include=FALSE}
+```{r check-low-trapcount, include=FALSE}
+# We can also call functions from other sources
+```
+
+```{r check-last-sample-collection, include=FALSE}
 
 # With a better sense for these data, we can modify them for our analyses.
 
@@ -123,7 +124,10 @@ organismsSiteCollection <- mcdowellArthropods %>%
     ),
     year = format(sample_date, format = '%Y')) %>%
   group_by(site_code, season, year) %>%
-  summarise(average = sum(allsizes / trap_count))
+  summarise(
+    average = sum(allsizes / trap_count),
+    .groups = 'drop'
+  )
 ```
 
 ### Introduction
